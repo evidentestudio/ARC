@@ -199,12 +199,22 @@
     border:1.5px solid rgba(29,185,84,0.65);
   }
   .btn-spotify .btn-title { color:#1DB954; }
+  .btn-spotify .btn-sub { color:#b9b5ae; }
 
   /* botão fábrica de canções */
   .btn-fabrica {
     background:rgba(21,21,22,0.7);
     border:1.5px solid #2a2a2b;
   }
+  .btn-fabrica .btn-sub { color:#b9b5ae; }
+
+  /* botão perfil das bandas */
+  .btn-perfil {
+    background:rgba(21,21,22,0.7);
+    border:1.5px solid #2a2a2b;
+  }
+  .btn-perfil .btn-sub { color:#b9b5ae; }
+
   .badge-em-breve {
     flex:0 0 auto;
     font-size:10px;
@@ -305,6 +315,18 @@
       <span class="badge-em-breve">Em breve</span>
       <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#c9c6c0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
+
+    <a class="btn btn-perfil" id="perfilBtn" href="#" target="_blank" rel="noopener">
+      <div class="btn-icon-fallback">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#c9c6c0" stroke-width="1.6"/><path d="M4 20c0-3.3 3.6-5 8-5s8 1.7 8 5" stroke="#c9c6c0" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <div class="btn-text">
+        <div class="btn-title">Perfil das Bandas</div>
+        <div class="btn-sub">Conheça as bandas cadastradas</div>
+      </div>
+      <span class="badge-em-breve">Em breve</span>
+      <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#c9c6c0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
   </div>
 
   <div class="socials">
@@ -343,6 +365,7 @@ for (let i = 0; i < 9; i++) {
 // TODO: troque pelos links reais quando estiverem prontos
 document.getElementById('spotifyBtn').href = "#";  // link da playlist no Spotify
 document.getElementById('fabricaBtn').href = "#";  // link da landing page do Kit Fábrica de Canções
+document.getElementById('perfilBtn').href = "#";   // link da página de perfil das bandas
 document.querySelector('.social-btn[aria-label="Instagram"]').href = "#"; // link do Instagram
 document.querySelector('.social-btn[aria-label="YouTube"]').href = "#";   // link do YouTube
 document.querySelector('.social-btn[aria-label="Spotify"]').href = "#";   // pode repetir o link da playlist
