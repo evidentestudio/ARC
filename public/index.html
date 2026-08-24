@@ -201,32 +201,20 @@
   .btn-spotify .btn-title { color:#1DB954; }
   .btn-spotify .btn-sub { color:#b9b5ae; }
 
-  /* botão fábrica de canções */
-  .btn-fabrica {
-    background:rgba(21,21,22,0.7);
-    border:1.5px solid #2a2a2b;
-  }
-  .btn-fabrica .btn-sub { color:#b9b5ae; }
-
   /* botão perfil das bandas */
   .btn-perfil {
     background:rgba(21,21,22,0.7);
-    border:1.5px solid #2a2a2b;
+    border:1.5px solid rgba(226,16,31,0.45);
   }
+  .btn-perfil .btn-icon-fallback { border:1.5px solid rgba(226,16,31,0.55); }
   .btn-perfil .btn-sub { color:#b9b5ae; }
 
-  .badge-em-breve {
-    flex:0 0 auto;
-    font-size:10px;
-    font-weight:700;
-    letter-spacing:0.3px;
-    text-transform:uppercase;
-    color:#f2a900;
-    border:1px solid #f2a900;
-    border-radius:5px;
-    padding:2px 6px;
-    white-space:nowrap;
+  /* botão fábrica de canções */
+  .btn-fabrica {
+    background:linear-gradient(135deg, rgba(226,16,31,0.32), rgba(120,10,10,0.18));
+    border:1.5px solid rgba(226,16,31,0.45);
   }
+  .btn-fabrica .btn-sub { color:#b9b5ae; }
 
   /* ---------- redes sociais ---------- */
   .socials {
@@ -306,26 +294,29 @@
       <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#1DB954" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
 
+    <a class="btn btn-perfil" id="perfilBtn" href="#" target="_blank" rel="noopener">
+      <div class="btn-icon-fallback">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="8.5" cy="8" r="3" stroke="#fff" stroke-width="1.6"/>
+          <path d="M2 19c0-3.2 2.9-5 6.5-5s6.5 1.8 6.5 5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M14.5 4.2c1.4.4 2.4 1.6 2.4 3.1 0 1.5-1 2.7-2.4 3.1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M17 14.3c2.2.5 3.7 1.9 3.7 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="btn-text">
+        <div class="btn-title">Perfil das Bandas</div>
+        <div class="btn-sub">Conheça as bandas da cena</div>
+      </div>
+      <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#e2101f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
     <a class="btn btn-fabrica" id="fabricaBtn" href="#" target="_blank" rel="noopener">
       <img class="btn-icon" id="fabricaIcon" alt="Kit Fábrica de Canções">
       <div class="btn-text">
         <div class="btn-title">Fábrica de Canções</div>
-        <div class="btn-sub">Conheça o kit para compositores</div>
+        <div class="btn-sub">Recursos para criar, compor e inspirar</div>
       </div>
-      <span class="badge-em-breve">Em breve</span>
-      <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#c9c6c0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-
-    <a class="btn btn-perfil" id="perfilBtn" href="#" target="_blank" rel="noopener">
-      <div class="btn-icon-fallback">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#c9c6c0" stroke-width="1.6"/><path d="M4 20c0-3.3 3.6-5 8-5s8 1.7 8 5" stroke="#c9c6c0" stroke-width="1.6" stroke-linecap="round"/></svg>
-      </div>
-      <div class="btn-text">
-        <div class="btn-title">Perfil das Bandas</div>
-        <div class="btn-sub">Conheça as bandas cadastradas</div>
-      </div>
-      <span class="badge-em-breve">Em breve</span>
-      <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#c9c6c0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg class="btn-chevron" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#e2101f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
   </div>
 
