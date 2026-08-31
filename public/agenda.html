@@ -429,14 +429,15 @@
 
   .sc-state { z-index:2; font-family:'Anton', sans-serif; font-size:max(22px, 5.2cqw); line-height:1.15; color:#f2f0ea; text-align:center; letter-spacing:0.25cqw; margin-top:2.2cqw; text-shadow:0 0.2cqw 0 #e2101f; overflow-wrap:break-word; }
 
-  .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; margin-top:2.6cqw; gap:1.1cqw; min-height:0; overflow:hidden; }
+  .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:2.6cqw; gap:calc(var(--row-scale, 1) * 1.1cqw); min-height:0; overflow:hidden; }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
-  .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, 3.1cqw); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 2.4cqw; white-space:nowrap; }
-  .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:0.8cqw 2cqw; }
-  .sc-band { font-family:'Anton', sans-serif; font-size:max(13px, 2.5cqw); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sc-place { display:flex; align-items:center; gap:1cqw; font-weight:600; font-size:max(11px, 2cqw); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sc-place .sc-dot { color:#e2101f; font-size:max(9px, 1.6cqw); flex:0 0 auto; }
-  .sc-place .sc-venue { color:#b9b5ae; font-weight:500; overflow:hidden; text-overflow:ellipsis; }
+  .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
+  .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:calc(var(--row-scale, 1) * 0.8cqw) calc(var(--row-scale, 1) * 2cqw); }
+  .sc-band { font-family:'Anton', sans-serif; font-size:max(13px, calc(var(--row-scale, 1) * 2.5cqw)); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-place { display:flex; align-items:center; gap:1cqw; min-width:0; font-weight:600; font-size:max(11px, calc(var(--row-scale, 1) * 2cqw)); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; }
+  .sc-place .sc-city { flex:0 0 auto; white-space:nowrap; }
+  .sc-place .sc-dot { color:#e2101f; font-size:max(9px, calc(var(--row-scale, 1) * 1.6cqw)); flex:0 0 auto; }
+  .sc-place .sc-venue { flex:1 1 auto; min-width:0; color:#b9b5ae; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   .sc-footer { z-index:2; margin-top:3.4cqw; display:flex; justify-content:space-between; align-items:center; }
   .sc-seal { font-weight:700; font-size:max(10px, 1.7cqw); letter-spacing:0.3cqw; color:#f2f0ea; display:flex; align-items:center; gap:0.7cqw; }
@@ -916,13 +917,17 @@ function updateSlidePreview() {
       '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
       '<div class="sc-info">' +
         '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
-        '<div class="sc-place"><span>' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
+        '<div class="sc-place"><span class="sc-city">' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
       '</div>' +
     '</div>'
   ).join('');
 
+  // com poucas agendas, aumenta os itens da lista pra ocupar melhor o
+  // espaço do slide em vez de deixar uma faixa vazia grande embaixo
+  const rowScale = Math.min(2.4, Math.max(1, 2.4 - (checked.length - 1) * 0.35));
+
   stage.innerHTML =
-    '<div class="slide-card" id="exportCard">' +
+    '<div class="slide-card" id="exportCard" style="--row-scale:' + rowScale + '">' +
       '<div class="sc-header">' +
         '<img class="sc-mark" src="data:image/jpeg;base64,' + LOGO_B64 + '">' +
         '<div class="sc-wordmark">Agenda<br><b>Rock Cristão</b></div>' +
@@ -932,6 +937,23 @@ function updateSlidePreview() {
       '<div class="sc-list">' + rowsHtml + '</div>' +
       '<div class="sc-footer"><div class="sc-seal">EVIDENTE</div><div class="sc-pagenum">' + uf + '</div></div>' +
     '</div>';
+}
+
+// corta o texto de um elemento (com "…" no fim) até caber na largura visível
+// dele — usado só na exportação, onde não dá pra confiar em text-overflow:ellipsis
+function truncateTextToFit(el) {
+  const original = el.textContent;
+  if (el.scrollWidth <= el.clientWidth + 1) return;
+  const cs = getComputedStyle(el);
+  const canvas = truncateTextToFit._canvas || (truncateTextToFit._canvas = document.createElement('canvas'));
+  const ctx = canvas.getContext('2d');
+  ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const maxWidth = el.clientWidth;
+  let text = original;
+  while (text.length > 1 && ctx.measureText(text + '…').width > maxWidth) {
+    text = text.slice(0, -1);
+  }
+  el.textContent = text.trimEnd() + '…';
 }
 
 document.getElementById('downloadBtn').addEventListener('click', async () => {
@@ -954,6 +976,11 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
   clone.style.maxWidth = 'none';
   clone.style.flexShrink = '0';
   document.body.appendChild(clone);
+
+  // html2canvas não sabe renderizar text-overflow:ellipsis, então o texto que
+  // dependeria disso (nome do local) precisa vir truncado de verdade, com "…"
+  // já no conteúdo, só no clone usado pra exportação
+  clone.querySelectorAll('.sc-venue').forEach(truncateTextToFit);
 
   try {
     const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0b0b0c' });
