@@ -364,6 +364,10 @@
     padding:1px 5px;
     margin-left:6px;
   }
+  .entry-check .tag-warn {
+    color:#f2a900;
+    border-color:#f2a900;
+  }
   .warn {
     font-size:14px;
     color:#f2a900;
@@ -428,7 +432,9 @@
   .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; margin-top:2.6cqw; gap:1.1cqw; min-height:0; overflow:hidden; }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
   .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:3.1cqw; text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 2.4cqw; white-space:nowrap; }
-  .sc-place { flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:1cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:0 2cqw; font-weight:600; font-size:2.55cqw; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:0.8cqw 2cqw; }
+  .sc-band { font-family:'Anton', sans-serif; font-size:2.5cqw; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-place { display:flex; align-items:center; gap:1cqw; font-weight:600; font-size:2cqw; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sc-place .sc-dot { color:#e2101f; font-size:1.6cqw; flex:0 0 auto; }
   .sc-place .sc-venue { color:#b9b5ae; font-weight:500; overflow:hidden; text-overflow:ellipsis; }
 
@@ -866,6 +872,7 @@ function renderEntriesForState() {
       '<input type="checkbox" class="entryCheck" data-idx="' + i + '" checked>' +
       '<div class="info"><b>' + escapeHtml(e.banda) + '</b>' +
       (e.tipo === 'other' ? '<span class="tag">reportada</span>' : '') +
+      (e.segueArc === 'nao' ? '<span class="tag tag-warn">não seguidor</span>' : '') +
       '<br><span>' + escapeHtml(e.cidade) + ' · ' + escapeHtml(e.local) + ' — ' + escapeHtml(e.data) + ' ' + escapeHtml(e.horario) + '</span></div>';
     listEl.appendChild(div);
   });
@@ -907,7 +914,10 @@ function updateSlidePreview() {
   const rowsHtml = checked.map(e =>
     '<div class="sc-row">' +
       '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
-      '<div class="sc-place"><span>' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
+      '<div class="sc-info">' +
+        '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
+        '<div class="sc-place"><span>' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
+      '</div>' +
     '</div>'
   ).join('');
 
