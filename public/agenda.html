@@ -940,8 +940,23 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
   const btn = document.getElementById('downloadBtn');
   btn.disabled = true;
   btn.textContent = 'Gerando imagem...';
+
+  // clona o card fora da tela numa largura fixa e generosa antes de capturar,
+  // pra a nitidez do PNG não depender do tamanho da janela do admin (o card
+  // usa cqw, então tudo dentro dele reescala junto) e sem mexer no preview visível
+  const EXPORT_WIDTH = 1080;
+  const clone = card.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.style.position = 'fixed';
+  clone.style.top = '0';
+  clone.style.left = '-99999px';
+  clone.style.width = EXPORT_WIDTH + 'px';
+  clone.style.maxWidth = 'none';
+  clone.style.flexShrink = '0';
+  document.body.appendChild(clone);
+
   try {
-    const canvas = await html2canvas(card, { scale: 3, backgroundColor: '#0b0b0c' });
+    const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0b0b0c' });
     const uf = document.getElementById('panelState').value;
     const link = document.createElement('a');
     link.download = 'arc-agenda-' + uf + '.png';
@@ -950,6 +965,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
   } catch (e) {
     showError && null;
   } finally {
+    clone.remove();
     btn.disabled = false;
     btn.textContent = 'Baixar imagem do slide';
   }
