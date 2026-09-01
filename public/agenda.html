@@ -451,7 +451,7 @@
 
   .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:2.6cqw; gap:calc(var(--row-scale, 1) * 1.1cqw); min-height:0; overflow:hidden; }
   .sc-columns { z-index:2; flex:1; display:flex; gap:2.4cqw; margin-top:2.6cqw; min-height:0; overflow:hidden; }
-  .sc-col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:calc(var(--row-scale, 1) * 1.1cqw); }
+  .sc-col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:flex-start; gap:calc(var(--row-scale, 1) * 1.1cqw); }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
   .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
   .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:calc(var(--row-scale, 1) * 0.8cqw) calc(var(--row-scale, 1) * 2cqw); }
@@ -563,7 +563,7 @@
         <option value="sim">Sim</option>
         <option value="nao">Não</option>
       </select>
-      <div class="hint warn-hint" id="followWarning" style="display:none">Só serão publicadas as agendas das bandas que seguirem a ARC.</div>
+      <div class="hint warn-hint" id="followWarning" style="display:none">Pedimos a gentileza de apoiar nosso projeto, nos seguindo no Instagram antes de continuar.</div>
     </div>
 
     <div class="field" id="proofField" style="display:none">
@@ -607,7 +607,7 @@
 
       <div class="panel-field">
         <label>Texto da faixa</label>
-        <input type="text" id="ribbonText" value="Agenda · Agosto 2026">
+        <input type="text" id="ribbonText">
       </div>
 
       <div id="entriesList"></div>
@@ -660,6 +660,7 @@ tabs.forEach(tab => {
     const isOther = currentTab === 'other';
     proofField.style.display = isOther ? 'block' : 'none';
     reporterField.style.display = isOther ? 'block' : 'none';
+    updateSubmitAvailability();
   });
 });
 
@@ -680,12 +681,22 @@ eventDateInput.addEventListener('input', () => {
   }
 });
 
-/* aviso de "não segue a ARC" */
+/* aviso de "não segue a ARC" + validação do @ ao reportar outra banda */
 const followsArcSelect = document.getElementById('followsArc');
 const followWarning = document.getElementById('followWarning');
+const proofLinkInput = document.getElementById('proofLink');
+
+function updateSubmitAvailability() {
+  const naoSegue = followsArcSelect.value === 'nao';
+  const faltaProof = currentTab === 'other' && !proofLinkInput.value.trim();
+  submitBtn.disabled = naoSegue || faltaProof;
+}
+
 followsArcSelect.addEventListener('change', () => {
   followWarning.style.display = followsArcSelect.value === 'nao' ? 'block' : 'none';
+  updateSubmitAvailability();
 });
+proofLinkInput.addEventListener('input', updateSubmitAvailability);
 
 function showForm() {
   loadingState.style.display = 'none';
@@ -721,6 +732,14 @@ form.addEventListener('submit', async (e) => {
 
   if (!entry.banda || !entry.estado || !entry.cidade || !entry.local || !entry.data || !entry.horario || !entry.segueArc) {
     showError('Preencha todos os campos obrigatórios.');
+    return;
+  }
+  if (entry.segueArc === 'nao') {
+    showError('Pedimos a gentileza de apoiar nosso projeto, nos seguindo no Instagram antes de continuar.');
+    return;
+  }
+  if (currentTab === 'other' && !entry.linkPrint) {
+    showError('Informe o @ do Instagram onde viu a agenda.');
     return;
   }
   if (!/^\d{2}\/\d{2}$/.test(entry.data)) {
@@ -759,8 +778,8 @@ form.addEventListener('submit', async (e) => {
 document.getElementById('newBtn').addEventListener('click', () => {
   form.reset();
   followWarning.style.display = 'none';
-  submitBtn.disabled = false;
   submitBtn.textContent = 'Enviar agenda';
+  updateSubmitAvailability();
   successBox.classList.remove('show');
   form.style.display = 'flex';
   clearError();
@@ -826,7 +845,16 @@ function dataSortKey(str) {
 }
 
 // retorna true/false indicando se a senha foi aceita
+function defaultRibbonText() {
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const agora = new Date();
+  return 'Agenda · ' + meses[agora.getMonth()] + ' ' + agora.getFullYear();
+}
+
 async function loadPanel(passcode) {
+  const ribbonInput = document.getElementById('ribbonText');
+  if (!ribbonInput.value) ribbonInput.value = defaultRibbonText();
+
   const panelLoading = document.getElementById('panelLoading');
   const panelBody = document.getElementById('panelBody');
   panelLoading.style.display = 'flex';
@@ -1086,10 +1114,21 @@ document.getElementById('slideStage').addEventListener('click', async (ev) => {
     const uf = document.getElementById('panelState').value;
     const totalSlides = document.querySelectorAll('.slide-card').length;
     const sufixo = totalSlides > 1 ? '-' + (parseInt(idx, 10) + 1) : '';
+
+    // usa Blob + object URL em vez de data URL direto no link: no celular
+    // (especialmente iOS), um link com href gigante em data: e nunca anexado
+    // ao DOM costuma ser ignorado ao chamar .click() — esse padrão é o que
+    // funciona de forma confiável em mais navegadores
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Falha ao gerar o arquivo de imagem.');
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.download = 'arc-agenda-' + uf + sufixo + '.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = blobUrl;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   } catch (e) {
     alert('Não foi possível gerar a imagem. Tente novamente.');
   } finally {
