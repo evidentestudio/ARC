@@ -439,32 +439,23 @@
   .slide-card::before { top:-4cqw; left:-4cqw; -webkit-mask-image: radial-gradient(circle at top left, black 55%, transparent 75%); mask-image: radial-gradient(circle at top left, black 55%, transparent 75%); }
   .slide-card::after  { bottom:-4cqw; right:-4cqw; -webkit-mask-image: radial-gradient(circle at bottom right, black 55%, transparent 75%); mask-image: radial-gradient(circle at bottom right, black 55%, transparent 75%); }
 
-  .sc-header { display:flex; align-items:center; gap:2.2cqw; z-index:2; }
+  .sc-header { display:flex; align-items:center; justify-content:space-between; gap:2cqw; z-index:2; }
+  .sc-header-left { display:flex; align-items:center; gap:2.2cqw; min-width:0; flex:0 1 auto; }
   .sc-mark { width:11.5cqw; height:11.5cqw; min-width:34px; min-height:34px; flex:0 0 auto; border-radius:1.4cqw; object-fit:cover; filter:drop-shadow(0 0.2cqw 0.6cqw rgba(0,0,0,0.6)); }
-  .sc-wordmark { font-weight:700; font-size:max(13px, 2.9cqw); letter-spacing:0.15cqw; line-height:1.15; color:#f2f0ea; text-transform:uppercase; }
-  .sc-wordmark b { color:#e2101f; }
+  .sc-month { font-family:'Anton', sans-serif; font-size:max(15px, 3.4cqw); line-height:1.1; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.1cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-header-state { flex:0 0 auto; font-family:'Anton', sans-serif; font-size:max(15px, 3.4cqw); line-height:1.1; color:#e2101f; text-transform:uppercase; letter-spacing:0.1cqw; text-align:right; max-width:44%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-  .sc-ribbon { z-index:2; margin-top:4.2cqw; background:#e2101f; color:#0b0b0c; font-weight:700; font-size:max(12px, 2.6cqw); letter-spacing:0.35cqw; text-transform:uppercase; text-align:center; padding:1.3cqw 0; transform:skewX(-6deg); }
-  .sc-ribbon-inner { display:inline-block; transform:skewX(6deg); }
-
-  .sc-state { z-index:2; font-family:'Anton', sans-serif; font-size:max(22px, 5.2cqw); line-height:1.15; color:#f2f0ea; text-align:center; letter-spacing:0.25cqw; margin-top:2.2cqw; text-shadow:0 0.2cqw 0 #e2101f; overflow-wrap:break-word; }
-
-  .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:2.6cqw; gap:calc(var(--row-scale, 1) * 1.1cqw); min-height:0; overflow:hidden; }
-  .sc-columns { z-index:2; flex:1; display:flex; gap:2.4cqw; margin-top:2.6cqw; min-height:0; overflow:hidden; }
-  .sc-col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:flex-start; gap:calc(var(--row-scale, 1) * 1.1cqw); }
+  .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:3.2cqw; gap:calc(var(--row-scale, 1) * 1.1cqw); min-height:0; overflow:hidden; }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
-  .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
+  .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:calc(var(--row-scale, 1) * 1cqw) calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
+  .sc-date-day { font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); line-height:1; text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); }
+  .sc-date-time { font-size:max(10px, calc(var(--row-scale, 1) * 1.6cqw)); line-height:1.2; margin-top:0.3cqw; opacity:0.85; }
   .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:calc(var(--row-scale, 1) * 0.8cqw) calc(var(--row-scale, 1) * 2cqw); }
   .sc-band { font-family:'Anton', sans-serif; font-size:max(13px, calc(var(--row-scale, 1) * 2.5cqw)); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sc-place { display:flex; align-items:center; gap:1cqw; min-width:0; font-weight:600; font-size:max(11px, calc(var(--row-scale, 1) * 2cqw)); line-height:1.3; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; }
   .sc-place .sc-city { flex:0 0 auto; white-space:nowrap; }
   .sc-place .sc-dot { color:#e2101f; font-size:max(9px, calc(var(--row-scale, 1) * 1.6cqw)); flex:0 0 auto; }
   .sc-place .sc-venue { flex:1 1 auto; min-width:0; color:#b9b5ae; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-  .sc-footer { z-index:2; margin-top:3.4cqw; display:flex; justify-content:space-between; align-items:center; }
-  .sc-seal { font-weight:700; font-size:max(10px, 1.7cqw); letter-spacing:0.3cqw; color:#f2f0ea; display:flex; align-items:center; gap:0.7cqw; }
-  .sc-seal::before { content:"⊙"; font-size:max(11px, 1.9cqw); color:#e2101f; }
-  .sc-pagenum { font-weight:600; font-size:max(10px, 1.7cqw); color:#7a7670; letter-spacing:0.05cqw; }
 
   .download-btn {
     margin-top:18px;
@@ -603,11 +594,6 @@
       <div class="panel-field">
         <label>Estado</label>
         <select id="panelState"></select>
-      </div>
-
-      <div class="panel-field">
-        <label>Texto da faixa</label>
-        <input type="text" id="ribbonText">
       </div>
 
       <div id="entriesList"></div>
@@ -844,17 +830,13 @@ function dataSortKey(str) {
   return parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
 }
 
-// retorna true/false indicando se a senha foi aceita
-function defaultRibbonText() {
-  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const agora = new Date();
-  return 'Agenda · ' + meses[agora.getMonth()] + ' ' + agora.getFullYear();
+function mesAtualNome() {
+  const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  return meses[new Date().getMonth()];
 }
 
+// retorna true/false indicando se a senha foi aceita
 async function loadPanel(passcode) {
-  const ribbonInput = document.getElementById('ribbonText');
-  if (!ribbonInput.value) ribbonInput.value = defaultRibbonText();
-
   const panelLoading = document.getElementById('panelLoading');
   const panelBody = document.getElementById('panelBody');
   panelLoading.style.display = 'flex';
@@ -975,11 +957,8 @@ function escapeHtml(str) {
   return (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-document.getElementById('ribbonText').addEventListener('input', updateSlidePreview);
-
-// entradas por slide (4 por coluna, 2 colunas) — passou disso, cria outro slide
-const POR_COLUNA = 4;
-const POR_SLIDE = POR_COLUNA * 2;
+// quantas agendas cabem por slide numa coluna só — passou disso, cria outro slide
+const POR_SLIDE = 8;
 
 function computeRowScale(n) {
   return Math.min(2.4, Math.max(1, 2.4 - (n - 1) * 0.35));
@@ -987,7 +966,10 @@ function computeRowScale(n) {
 
 function buildRowHtml(e) {
   return '<div class="sc-row">' +
-      '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
+      '<div class="sc-date">' +
+        '<div class="sc-date-day">' + escapeHtml(e.data) + '</div>' +
+        '<div class="sc-date-time">' + escapeHtml(e.horario) + '</div>' +
+      '</div>' +
       '<div class="sc-info">' +
         '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
         '<div class="sc-place"><span class="sc-city">' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
@@ -1012,7 +994,7 @@ function updateSlidePreview() {
   const uf = document.getElementById('panelState').value;
   const stateNames = {AC:'ACRE',AL:'ALAGOAS',AP:'AMAPÁ',AM:'AMAZONAS',BA:'BAHIA',CE:'CEARÁ',DF:'DISTRITO FEDERAL',ES:'ESPÍRITO SANTO',GO:'GOIÁS',MA:'MARANHÃO',MT:'MATO GROSSO',MS:'MATO GROSSO DO SUL',MG:'MINAS GERAIS',PA:'PARÁ',PB:'PARAÍBA',PR:'PARANÁ',PE:'PERNAMBUCO',PI:'PIAUÍ',RJ:'RIO DE JANEIRO',RN:'RIO GRANDE DO NORTE',RS:'RIO GRANDE DO SUL',RO:'RONDÔNIA',RR:'RORAIMA',SC:'SANTA CATARINA',SP:'SÃO PAULO',SE:'SERGIPE',TO:'TOCANTINS'};
   const stateName = stateNames[uf] || uf;
-  const ribbonText = document.getElementById('ribbonText').value;
+  const mes = mesAtualNome();
 
   // entradas já vêm ordenadas por data (mais próxima primeiro) desde
   // renderEntriesForState — paginação preserva essa ordem
@@ -1026,36 +1008,21 @@ function updateSlidePreview() {
     ? paginas.length + ' slides serão gerados (até ' + POR_SLIDE + ' agendas cada) — baixe cada um individualmente.'
     : '';
 
-  const fixedScale = computeRowScale(POR_COLUNA);
-
   stage.innerHTML = paginas.map((pagina, idx) => {
-    let listHtml, rowScale;
-    if (pagina.length <= POR_COLUNA) {
-      rowScale = computeRowScale(pagina.length);
-      listHtml = '<div class="sc-list">' + pagina.map(buildRowHtml).join('') + '</div>';
-    } else {
-      rowScale = fixedScale;
-      const col1 = pagina.slice(0, POR_COLUNA);
-      const col2 = pagina.slice(POR_COLUNA, POR_SLIDE);
-      listHtml = '<div class="sc-columns">' +
-        '<div class="sc-col">' + col1.map(buildRowHtml).join('') + '</div>' +
-        '<div class="sc-col">' + col2.map(buildRowHtml).join('') + '</div>' +
-      '</div>';
-    }
-
-    const pageLabel = paginas.length > 1 ? (uf + ' · ' + (idx + 1) + '/' + paginas.length) : uf;
+    const rowScale = computeRowScale(pagina.length);
+    const listHtml = '<div class="sc-list">' + pagina.map(buildRowHtml).join('') + '</div>';
     const btnLabel = paginas.length > 1 ? 'Baixar imagem (' + (idx + 1) + '/' + paginas.length + ')' : 'Baixar imagem do slide';
 
     return '<div class="slide-page">' +
       '<div class="slide-card" data-slide="' + idx + '" style="--row-scale:' + rowScale + '">' +
         '<div class="sc-header">' +
-          '<img class="sc-mark" src="data:image/jpeg;base64,' + LOGO_B64 + '">' +
-          '<div class="sc-wordmark">Agenda<br><b>Rock Cristão</b></div>' +
+          '<div class="sc-header-left">' +
+            '<img class="sc-mark" src="data:image/jpeg;base64,' + LOGO_B64 + '">' +
+            '<div class="sc-month">' + escapeHtml(mes) + '</div>' +
+          '</div>' +
+          '<div class="sc-header-state">' + escapeHtml(stateName) + '</div>' +
         '</div>' +
-        '<div class="sc-ribbon"><span class="sc-ribbon-inner">' + escapeHtml(ribbonText) + '</span></div>' +
-        '<div class="sc-state">' + escapeHtml(stateName) + '</div>' +
         listHtml +
-        '<div class="sc-footer"><div class="sc-seal">EVIDENTE</div><div class="sc-pagenum">' + escapeHtml(pageLabel) + '</div></div>' +
       '</div>' +
       '<button type="button" class="download-btn" data-slide-index="' + idx + '">' + btnLabel + '</button>' +
     '</div>';
@@ -1112,7 +1079,7 @@ document.getElementById('slideStage').addEventListener('click', async (ev) => {
   try {
     const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0b0b0c' });
     const uf = document.getElementById('panelState').value;
-    const totalSlides = document.querySelectorAll('.slide-card').length;
+    const totalSlides = document.querySelectorAll('#slideStage .slide-card').length;
     const sufixo = totalSlides > 1 ? '-' + (parseInt(idx, 10) + 1) : '';
 
     // usa Blob + object URL em vez de data URL direto no link: no celular
