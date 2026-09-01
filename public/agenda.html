@@ -349,9 +349,22 @@
     margin-bottom:8px;
   }
   .entry-check input { margin-top:3px; flex:0 0 auto; }
-  .entry-check .info { font-size:16px; line-height:1.35; }
+  .entry-check .info { flex:1 1 auto; min-width:0; font-size:16px; line-height:1.35; }
   .entry-check .info b { color:#f2f0ea; }
   .entry-check .info span { color:#8a8680; }
+  .entry-delete {
+    flex:0 0 auto;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:1.5px solid #3a3835;
+    background:transparent;
+    color:#8a8680;
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+  }
+  .entry-delete:hover { border-color:#e2101f; color:#e2101f; }
   .entry-check .tag {
     display:inline-block;
     font-size:11px;
@@ -386,9 +399,16 @@
   /* ---- slide preview (mirrors approved template) ---- */
   #slideStage {
     display:flex;
-    justify-content:center;
+    flex-direction:column;
+    align-items:center;
+    gap:28px;
     margin-top:22px;
   }
+  .slide-page {
+    width:100%;
+    max-width:480px;
+  }
+  .slide-page .download-btn { margin-top:14px; }
   .slide-card {
     width:100%;
     max-width:480px;
@@ -430,6 +450,8 @@
   .sc-state { z-index:2; font-family:'Anton', sans-serif; font-size:max(22px, 5.2cqw); line-height:1.15; color:#f2f0ea; text-align:center; letter-spacing:0.25cqw; margin-top:2.2cqw; text-shadow:0 0.2cqw 0 #e2101f; overflow-wrap:break-word; }
 
   .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:2.6cqw; gap:calc(var(--row-scale, 1) * 1.1cqw); min-height:0; overflow:hidden; }
+  .sc-columns { z-index:2; flex:1; display:flex; gap:2.4cqw; margin-top:2.6cqw; min-height:0; overflow:hidden; }
+  .sc-col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:calc(var(--row-scale, 1) * 1.1cqw); }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
   .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
   .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:calc(var(--row-scale, 1) * 0.8cqw) calc(var(--row-scale, 1) * 2cqw); }
@@ -589,12 +611,11 @@
       </div>
 
       <div id="entriesList"></div>
-      <div class="warn" id="warnMore">Mais de 7 agendas deixam o slide apertado — considere dividir em duas partes.</div>
+      <div class="warn" id="warnMore"></div>
 
       <div id="emptyState" class="empty-state" style="display:none">Nenhuma agenda cadastrada pra esse estado ainda.</div>
 
       <div id="slideStage"></div>
-      <button class="download-btn" id="downloadBtn" disabled>Baixar imagem do slide</button>
     </div>
   </div>
 
@@ -720,7 +741,12 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify(entry)
     });
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Falha ao salvar.');
+    if (!resp.ok) {
+      showError(data.error || 'Falha ao salvar.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar agenda';
+      return;
+    }
     form.style.display = 'none';
     successBox.classList.add('show');
   } catch (err) {
@@ -829,13 +855,15 @@ async function loadPanel(passcode) {
   return true;
 }
 
-function populatePanelStates() {
+function populatePanelStates(preferredUf) {
   const select = document.getElementById('panelState');
   select.innerHTML = '';
   const statesPresent = [...new Set(allEntries.map(e => e.estado))].sort();
   if (statesPresent.length === 0) {
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = 'Nenhuma agenda cadastrada ainda.';
+    document.getElementById('entriesList').innerHTML = '';
+    document.getElementById('slideStage').innerHTML = '';
     return;
   }
   statesPresent.forEach(uf => {
@@ -844,9 +872,12 @@ function populatePanelStates() {
     opt.textContent = uf + ' (' + allEntries.filter(e => e.estado === uf).length + ')';
     select.appendChild(opt);
   });
-  select.addEventListener('change', renderEntriesForState);
+  if (preferredUf && statesPresent.includes(preferredUf)) {
+    select.value = preferredUf;
+  }
   renderEntriesForState();
 }
+document.getElementById('panelState').addEventListener('change', renderEntriesForState);
 
 function renderEntriesForState() {
   const uf = document.getElementById('panelState').value;
@@ -861,7 +892,6 @@ function renderEntriesForState() {
   if (entries.length === 0) {
     emptyEl.style.display = 'block';
     document.getElementById('slideStage').innerHTML = '';
-    document.getElementById('downloadBtn').disabled = true;
     return;
   }
   emptyEl.style.display = 'none';
@@ -874,13 +904,43 @@ function renderEntriesForState() {
       '<div class="info"><b>' + escapeHtml(e.banda) + '</b>' +
       (e.tipo === 'other' ? '<span class="tag">reportada</span>' : '') +
       (e.segueArc === 'nao' ? '<span class="tag tag-warn">não seguidor</span>' : '') +
-      '<br><span>' + escapeHtml(e.cidade) + ' · ' + escapeHtml(e.local) + ' — ' + escapeHtml(e.data) + ' ' + escapeHtml(e.horario) + '</span></div>';
+      '<br><span>' + escapeHtml(e.cidade) + ' · ' + escapeHtml(e.local) + ' — ' + escapeHtml(e.data) + ' ' + escapeHtml(e.horario) + '</span></div>' +
+      '<button type="button" class="entry-delete" data-i="' + e._i + '" title="Excluir agenda">✕</button>';
     listEl.appendChild(div);
   });
 
   listEl.dataset.entries = JSON.stringify(entries);
   listEl.querySelectorAll('.entryCheck').forEach(cb => cb.addEventListener('change', updateSlidePreview));
+  listEl.querySelectorAll('.entry-delete').forEach(btn => btn.addEventListener('click', onDeleteEntryClick));
   updateSlidePreview();
+}
+
+async function onDeleteEntryClick(ev) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const btn = ev.currentTarget;
+  if (!confirm('Excluir essa agenda? Essa ação não pode ser desfeita.')) return;
+  const i = Number(btn.dataset.i);
+  const ufAtual = document.getElementById('panelState').value;
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/api/agenda', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify({ index: i })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Falha ao excluir.');
+
+    const refetch = await fetch('/api/agenda', { headers: { 'x-admin-key': adminKey } });
+    const refetchData = await refetch.json();
+    if (!refetch.ok) throw new Error(refetchData.error || 'Falha ao recarregar.');
+    allEntries = refetchData.entries || [];
+    populatePanelStates(ufAtual);
+  } catch (err) {
+    alert('Não foi possível excluir: ' + (err && err.message ? err.message : 'erro desconhecido'));
+    btn.disabled = false;
+  }
 }
 
 function escapeHtml(str) {
@@ -889,54 +949,89 @@ function escapeHtml(str) {
 
 document.getElementById('ribbonText').addEventListener('input', updateSlidePreview);
 
+// entradas por slide (4 por coluna, 2 colunas) — passou disso, cria outro slide
+const POR_COLUNA = 4;
+const POR_SLIDE = POR_COLUNA * 2;
+
+function computeRowScale(n) {
+  return Math.min(2.4, Math.max(1, 2.4 - (n - 1) * 0.35));
+}
+
+function buildRowHtml(e) {
+  return '<div class="sc-row">' +
+      '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
+      '<div class="sc-info">' +
+        '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
+        '<div class="sc-place"><span class="sc-city">' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
+      '</div>' +
+    '</div>';
+}
+
 function updateSlidePreview() {
   const listEl = document.getElementById('entriesList');
   const entries = JSON.parse(listEl.dataset.entries || '[]');
   const checked = [...listEl.querySelectorAll('.entryCheck:checked')].map(cb => entries[+cb.dataset.idx]);
 
-  const warn = document.getElementById('warnMore');
-  warn.classList.toggle('show', checked.length > 7);
-
   const stage = document.getElementById('slideStage');
-  const downloadBtn = document.getElementById('downloadBtn');
+  const warn = document.getElementById('warnMore');
 
   if (checked.length === 0) {
     stage.innerHTML = '';
-    downloadBtn.disabled = true;
+    warn.classList.remove('show');
     return;
   }
-  downloadBtn.disabled = false;
 
   const uf = document.getElementById('panelState').value;
   const stateNames = {AC:'ACRE',AL:'ALAGOAS',AP:'AMAPÁ',AM:'AMAZONAS',BA:'BAHIA',CE:'CEARÁ',DF:'DISTRITO FEDERAL',ES:'ESPÍRITO SANTO',GO:'GOIÁS',MA:'MARANHÃO',MT:'MATO GROSSO',MS:'MATO GROSSO DO SUL',MG:'MINAS GERAIS',PA:'PARÁ',PB:'PARAÍBA',PR:'PARANÁ',PE:'PERNAMBUCO',PI:'PIAUÍ',RJ:'RIO DE JANEIRO',RN:'RIO GRANDE DO NORTE',RS:'RIO GRANDE DO SUL',RO:'RONDÔNIA',RR:'RORAIMA',SC:'SANTA CATARINA',SP:'SÃO PAULO',SE:'SERGIPE',TO:'TOCANTINS'};
   const stateName = stateNames[uf] || uf;
   const ribbonText = document.getElementById('ribbonText').value;
 
-  const rowsHtml = checked.map(e =>
-    '<div class="sc-row">' +
-      '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
-      '<div class="sc-info">' +
-        '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
-        '<div class="sc-place"><span class="sc-city">' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span><span class="sc-venue">' + escapeHtml(e.local) + '</span></div>' +
-      '</div>' +
-    '</div>'
-  ).join('');
+  // entradas já vêm ordenadas por data (mais próxima primeiro) desde
+  // renderEntriesForState — paginação preserva essa ordem
+  const paginas = [];
+  for (let i = 0; i < checked.length; i += POR_SLIDE) {
+    paginas.push(checked.slice(i, i + POR_SLIDE));
+  }
 
-  // com poucas agendas, aumenta os itens da lista pra ocupar melhor o
-  // espaço do slide em vez de deixar uma faixa vazia grande embaixo
-  const rowScale = Math.min(2.4, Math.max(1, 2.4 - (checked.length - 1) * 0.35));
+  warn.classList.toggle('show', paginas.length > 1);
+  warn.textContent = paginas.length > 1
+    ? paginas.length + ' slides serão gerados (até ' + POR_SLIDE + ' agendas cada) — baixe cada um individualmente.'
+    : '';
 
-  stage.innerHTML =
-    '<div class="slide-card" id="exportCard" style="--row-scale:' + rowScale + '">' +
-      '<div class="sc-header">' +
-        '<img class="sc-mark" src="data:image/jpeg;base64,' + LOGO_B64 + '">' +
-        '<div class="sc-wordmark">Agenda<br><b>Rock Cristão</b></div>' +
+  const fixedScale = computeRowScale(POR_COLUNA);
+
+  stage.innerHTML = paginas.map((pagina, idx) => {
+    let listHtml, rowScale;
+    if (pagina.length <= POR_COLUNA) {
+      rowScale = computeRowScale(pagina.length);
+      listHtml = '<div class="sc-list">' + pagina.map(buildRowHtml).join('') + '</div>';
+    } else {
+      rowScale = fixedScale;
+      const col1 = pagina.slice(0, POR_COLUNA);
+      const col2 = pagina.slice(POR_COLUNA, POR_SLIDE);
+      listHtml = '<div class="sc-columns">' +
+        '<div class="sc-col">' + col1.map(buildRowHtml).join('') + '</div>' +
+        '<div class="sc-col">' + col2.map(buildRowHtml).join('') + '</div>' +
+      '</div>';
+    }
+
+    const pageLabel = paginas.length > 1 ? (uf + ' · ' + (idx + 1) + '/' + paginas.length) : uf;
+    const btnLabel = paginas.length > 1 ? 'Baixar imagem (' + (idx + 1) + '/' + paginas.length + ')' : 'Baixar imagem do slide';
+
+    return '<div class="slide-page">' +
+      '<div class="slide-card" data-slide="' + idx + '" style="--row-scale:' + rowScale + '">' +
+        '<div class="sc-header">' +
+          '<img class="sc-mark" src="data:image/jpeg;base64,' + LOGO_B64 + '">' +
+          '<div class="sc-wordmark">Agenda<br><b>Rock Cristão</b></div>' +
+        '</div>' +
+        '<div class="sc-ribbon"><span class="sc-ribbon-inner">' + escapeHtml(ribbonText) + '</span></div>' +
+        '<div class="sc-state">' + escapeHtml(stateName) + '</div>' +
+        listHtml +
+        '<div class="sc-footer"><div class="sc-seal">EVIDENTE</div><div class="sc-pagenum">' + escapeHtml(pageLabel) + '</div></div>' +
       '</div>' +
-      '<div class="sc-ribbon"><span class="sc-ribbon-inner">' + escapeHtml(ribbonText) + '</span></div>' +
-      '<div class="sc-state">' + escapeHtml(stateName) + '</div>' +
-      '<div class="sc-list">' + rowsHtml + '</div>' +
-      '<div class="sc-footer"><div class="sc-seal">EVIDENTE</div><div class="sc-pagenum">' + uf + '</div></div>' +
+      '<button type="button" class="download-btn" data-slide-index="' + idx + '">' + btnLabel + '</button>' +
     '</div>';
+  }).join('');
 }
 
 // corta o texto de um elemento (com "…" no fim) até caber na largura visível
@@ -956,10 +1051,14 @@ function truncateTextToFit(el) {
   el.textContent = text.trimEnd() + '…';
 }
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
-  const card = document.getElementById('exportCard');
+document.getElementById('slideStage').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('.download-btn');
+  if (!btn) return;
+  const idx = btn.dataset.slideIndex;
+  const card = document.querySelector('.slide-card[data-slide="' + idx + '"]');
   if (!card || typeof html2canvas === 'undefined') return;
-  const btn = document.getElementById('downloadBtn');
+
+  const originalLabel = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Gerando imagem...';
 
@@ -985,16 +1084,18 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
   try {
     const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0b0b0c' });
     const uf = document.getElementById('panelState').value;
+    const totalSlides = document.querySelectorAll('.slide-card').length;
+    const sufixo = totalSlides > 1 ? '-' + (parseInt(idx, 10) + 1) : '';
     const link = document.createElement('a');
-    link.download = 'arc-agenda-' + uf + '.png';
+    link.download = 'arc-agenda-' + uf + sufixo + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch (e) {
-    showError && null;
+    alert('Não foi possível gerar a imagem. Tente novamente.');
   } finally {
     clone.remove();
     btn.disabled = false;
-    btn.textContent = 'Baixar imagem do slide';
+    btn.textContent = originalLabel;
   }
 });
 </script>

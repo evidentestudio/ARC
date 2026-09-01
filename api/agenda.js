@@ -28,6 +28,14 @@ async function redis(command) {
 // Estrutura no Redis: uma lista (LPUSH/LRANGE) chamada "arc:agendas"
 // contendo os registros em JSON, mais simples que manter chaves separadas.
 
+const LIMITE_MENSAL = 200;
+
+function chaveContadorMes() {
+  const agora = new Date();
+  const mes = String(agora.getUTCMonth() + 1).padStart(2, '0');
+  return `arc:agendas:count:${agora.getUTCFullYear()}-${mes}`;
+}
+
 function validarEntrada(body) {
   const obrigatorios = ['tipo', 'banda', 'estado', 'cidade', 'local', 'data', 'horario', 'segueArc'];
   for (const campo of obrigatorios) {
@@ -51,7 +59,7 @@ function sanitizar(str, max = 200) {
 export default async function handler(req, res) {
   // CORS básico — ajuste o domínio conforme necessário
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
 
   if (req.method === 'OPTIONS') {
@@ -68,6 +76,16 @@ export default async function handler(req, res) {
       const erro = validarEntrada(body);
       if (erro) {
         return res.status(400).json({ error: erro });
+      }
+
+      const chaveMes = chaveContadorMes();
+      const totalMes = await redis(['INCR', chaveMes]);
+      if (totalMes === 1) {
+        // primeira inscrição do mês: define expiração de limpeza (40 dias, com folga)
+        await redis(['EXPIRE', chaveMes, 60 * 60 * 24 * 40]);
+      }
+      if (totalMes > LIMITE_MENSAL) {
+        return res.status(429).json({ error: 'Desculpe, atingimos o limite de inscrições para este mês.' });
       }
 
       const entry = {
@@ -103,9 +121,9 @@ export default async function handler(req, res) {
     try {
       const raw = await redis(['LRANGE', 'arc:agendas', '0', '-1']);
       const entries = (raw || [])
-        .map((item) => {
+        .map((item, i) => {
           try {
-            return JSON.parse(item);
+            return { ...JSON.parse(item), _i: i };
           } catch {
             return null;
           }
@@ -116,6 +134,36 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: 'Falha ao carregar as agendas.' });
+    }
+  }
+
+  if (req.method === 'DELETE') {
+    // Exclusão exige senha de admin (header x-admin-key)
+    const key = req.headers['x-admin-key'];
+    if (!ADMIN_PASSCODE || key !== ADMIN_PASSCODE) {
+      return res.status(401).json({ error: 'Não autorizado.' });
+    }
+
+    const body = req.body || {};
+    const indice = Number(body.index);
+    if (!Number.isInteger(indice) || indice < 0) {
+      return res.status(400).json({ error: 'Índice da agenda inválido.' });
+    }
+
+    try {
+      const raw = await redis(['LRANGE', 'arc:agendas', '0', '-1']);
+      if (!raw || indice >= raw.length) {
+        return res.status(404).json({ error: 'Agenda não encontrada.' });
+      }
+      const restante = raw.filter((_, i) => i !== indice);
+      await redis(['DEL', 'arc:agendas']);
+      if (restante.length > 0) {
+        await redis(['RPUSH', 'arc:agendas', ...restante]);
+      }
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: 'Falha ao excluir a agenda.' });
     }
   }
 
