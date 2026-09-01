@@ -443,7 +443,7 @@
   .sc-header-left { display:flex; align-items:center; gap:2.2cqw; min-width:0; flex:0 1 auto; }
   .sc-mark { width:11.5cqw; height:11.5cqw; min-width:34px; min-height:34px; flex:0 0 auto; border-radius:1.4cqw; object-fit:cover; filter:drop-shadow(0 0.2cqw 0.6cqw rgba(0,0,0,0.6)); }
   .sc-month { font-family:'Anton', sans-serif; font-size:max(15px, 3.4cqw); line-height:1.1; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.1cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sc-header-state { flex:0 0 auto; font-family:'Anton', sans-serif; font-size:max(15px, 3.4cqw); line-height:1.1; color:#e2101f; text-transform:uppercase; letter-spacing:0.1cqw; text-align:right; max-width:44%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-header-state { flex:0 0 auto; font-family:'Anton', sans-serif; font-size:max(20px, 4.6cqw); line-height:1.1; color:#ff2d3d; text-shadow:0.06cqw 0.06cqw 0 rgba(0,0,0,0.55); text-transform:uppercase; letter-spacing:0.1cqw; text-align:right; max-width:48%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   .sc-list { z-index:2; flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:2cqw; gap:calc(var(--row-scale, 1) * 0.8cqw); min-height:0; overflow:hidden; }
   .sc-row { display:flex; align-items:stretch; min-width:0; }
@@ -614,6 +614,20 @@
       <div class="modal-actions">
         <button class="modal-cancel" id="pwCancel">Cancelar</button>
         <button class="modal-confirm" id="pwConfirm">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="imgPreviewOverlay">
+    <div class="modal-box" style="max-width:400px;">
+      <div class="modal-title">Imagem gerada</div>
+      <img id="imgPreviewImg" style="width:100%; border-radius:8px; display:block;" alt="Slide gerado">
+      <div class="hint" style="margin-top:12px; text-align:center;">
+        O download deve começar automaticamente. Se não começar (comum em alguns celulares),
+        toque e segure a imagem acima e escolha "Salvar imagem".
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="imgPreviewClose">Fechar</button>
       </div>
     </div>
   </div>
@@ -1095,7 +1109,15 @@ document.getElementById('slideStage').addEventListener('click', async (ev) => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+    // além de tentar o download automático (que em vários navegadores de
+    // celular — sobretudo depois de uma operação assíncrona como o
+    // html2canvas — é silenciosamente ignorado por não estar mais dentro do
+    // "gesto do usuário"), sempre mostra a imagem numa prévia: no celular dá
+    // pra segurar e salvar manualmente, funciona em qualquer navegador
+    document.getElementById('imgPreviewImg').src = blobUrl;
+    document.getElementById('imgPreviewOverlay').classList.add('show');
+    document.getElementById('imgPreviewOverlay').dataset.blobUrl = blobUrl;
   } catch (e) {
     alert('Não foi possível gerar a imagem. Tente novamente.');
   } finally {
@@ -1103,6 +1125,13 @@ document.getElementById('slideStage').addEventListener('click', async (ev) => {
     btn.disabled = false;
     btn.textContent = originalLabel;
   }
+});
+
+document.getElementById('imgPreviewClose').addEventListener('click', () => {
+  const overlay = document.getElementById('imgPreviewOverlay');
+  overlay.classList.remove('show');
+  const blobUrl = overlay.dataset.blobUrl;
+  if (blobUrl) URL.revokeObjectURL(blobUrl);
 });
 </script>
 </body>
