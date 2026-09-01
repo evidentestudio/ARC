@@ -449,9 +449,11 @@
   .sc-row { display:flex; align-items:stretch; min-width:0; }
   .sc-date { flex:0 0 auto; background:#e2101f; color:#fff; font-family:'Anton', sans-serif; font-weight:700; font-size:max(16px, calc(var(--row-scale, 1) * 3.1cqw)); text-shadow:0.08cqw 0.08cqw 0 rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:0 calc(var(--row-scale, 1) * 2.4cqw); white-space:nowrap; }
   .sc-info { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:0.2cqw; background:rgba(255,255,255,0.04); border-bottom:0.14cqw solid rgba(226,16,31,0.5); padding:calc(var(--row-scale, 1) * 0.4cqw) calc(var(--row-scale, 1) * 2cqw); }
-  .sc-band { font-family:'Anton', sans-serif; font-size:max(13px, calc(var(--row-scale, 1) * 2.5cqw)); line-height:1.15; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-band-row { display:flex; align-items:baseline; gap:1cqw; min-width:0; }
+  .sc-band-row .sc-band { flex:1 1 auto; min-width:0; font-family:'Anton', sans-serif; font-size:max(13px, calc(var(--row-scale, 1) * 2.5cqw)); line-height:1.15; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sc-band-row .sc-dot { color:#e2101f; font-size:max(9px, calc(var(--row-scale, 1) * 1.6cqw)); flex:0 0 auto; }
+  .sc-band-row .sc-city { flex:0 0 auto; font-weight:600; font-size:max(11px, calc(var(--row-scale, 1) * 2cqw)); color:#b9b5ae; text-transform:uppercase; letter-spacing:0.03cqw; white-space:nowrap; }
   .sc-place { display:flex; align-items:center; gap:1cqw; min-width:0; font-weight:600; font-size:max(11px, calc(var(--row-scale, 1) * 2cqw)); line-height:1.15; color:#f2f0ea; text-transform:uppercase; letter-spacing:0.03cqw; }
-  .sc-place .sc-city { flex:0 0 auto; white-space:nowrap; }
   .sc-place .sc-dot { color:#e2101f; font-size:max(9px, calc(var(--row-scale, 1) * 1.6cqw)); flex:0 0 auto; }
   .sc-place .sc-venue { flex:1 1 auto; min-width:0; color:#b9b5ae; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sc-place .sc-time { flex:0 0 auto; font-size:max(13px, calc(var(--row-scale, 1) * 2.6cqw)); color:#f2f0ea; font-weight:700; white-space:nowrap; }
@@ -532,7 +534,8 @@
 
     <div class="field">
       <label>Local</label>
-      <input type="text" id="venue" placeholder="Ex: Igreja Batista Central" required>
+      <input type="text" id="venue" placeholder="Ex: Igreja Batista Central" maxlength="40" required>
+      <div class="hint" id="venueHint">Máximo de 40 caracteres (limite do espaço no slide) — 0/40</div>
     </div>
 
     <div class="row2">
@@ -680,6 +683,18 @@ eventDateInput.addEventListener('input', () => {
   }
 });
 
+/* contador/aviso de limite de caracteres do local (o slide tem espaço limitado) */
+const venueInput = document.getElementById('venue');
+const venueHint = document.getElementById('venueHint');
+venueInput.addEventListener('input', () => {
+  const len = venueInput.value.length;
+  const atLimit = len >= 40;
+  venueHint.classList.toggle('warn-hint', atLimit);
+  venueHint.textContent = atLimit
+    ? 'Nome muito longo pro espaço do slide — tente abreviar (ex: "Igreja Batista" em vez do nome completo).'
+    : 'Máximo de 40 caracteres (limite do espaço no slide) — ' + len + '/40';
+});
+
 /* aviso de "não segue a ARC" + validação do @ ao reportar outra banda */
 const followsArcSelect = document.getElementById('followsArc');
 const followWarning = document.getElementById('followWarning');
@@ -731,6 +746,10 @@ form.addEventListener('submit', async (e) => {
 
   if (!entry.banda || !entry.estado || !entry.cidade || !entry.local || !entry.data || !entry.horario || !entry.segueArc) {
     showError('Preencha todos os campos obrigatórios.');
+    return;
+  }
+  if (entry.local.length > 40) {
+    showError('Nome do local muito longo pro espaço do slide — tente abreviar (ex: "Igreja Batista" em vez do nome completo).');
     return;
   }
   if (entry.segueArc === 'nao') {
@@ -981,9 +1000,11 @@ function buildRowHtml(e) {
   return '<div class="sc-row">' +
       '<div class="sc-date">' + escapeHtml(e.data) + '</div>' +
       '<div class="sc-info">' +
-        '<div class="sc-band">' + escapeHtml(e.banda) + '</div>' +
+        '<div class="sc-band-row">' +
+          '<span class="sc-band">' + escapeHtml(e.banda) + '</span><span class="sc-dot">●</span>' +
+          '<span class="sc-city">' + escapeHtml(e.cidade) + '</span>' +
+        '</div>' +
         '<div class="sc-place">' +
-          '<span class="sc-city">' + escapeHtml(e.cidade) + '</span><span class="sc-dot">●</span>' +
           '<span class="sc-venue">' + escapeHtml(e.local) + '</span><span class="sc-dot">●</span>' +
           '<span class="sc-time">' + escapeHtml(e.horario) + '</span>' +
         '</div>' +
@@ -1052,9 +1073,12 @@ function truncateTextToFit(el) {
   const canvas = truncateTextToFit._canvas || (truncateTextToFit._canvas = document.createElement('canvas'));
   const ctx = canvas.getContext('2d');
   ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  // canvas.measureText não aplica text-transform sozinho, então medimos já
+  // maiúsculo pra não deixar texto "cabendo" na conta e estourando no render
+  const upper = cs.textTransform === 'uppercase';
   const maxWidth = el.clientWidth;
   let text = original;
-  while (text.length > 1 && ctx.measureText(text + '…').width > maxWidth) {
+  while (text.length > 1 && ctx.measureText((upper ? text.toUpperCase() : text) + '…').width > maxWidth) {
     text = text.slice(0, -1);
   }
   el.textContent = text.trimEnd() + '…';
@@ -1088,7 +1112,7 @@ document.getElementById('slideStage').addEventListener('click', async (ev) => {
   // html2canvas não sabe renderizar text-overflow:ellipsis, então o texto que
   // dependeria disso (nome do local) precisa vir truncado de verdade, com "…"
   // já no conteúdo, só no clone usado pra exportação
-  clone.querySelectorAll('.sc-venue').forEach(truncateTextToFit);
+  clone.querySelectorAll('.sc-venue, .sc-band').forEach(truncateTextToFit);
 
   try {
     const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0b0b0c' });
