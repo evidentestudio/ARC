@@ -49,6 +49,9 @@ function validarEntrada(body) {
   if (body.tipo !== 'own' && body.tipo !== 'other') {
     return 'Tipo de agenda inválido.';
   }
+  if (body.local.trim().length > 40) {
+    return 'Nome do local muito longo (máximo de 40 caracteres) — tente abreviar.';
+  }
   return null;
 }
 
