@@ -389,6 +389,41 @@
   }
   .warn.show { display:block; }
 
+  /* ---- importar agenda de imagem (IA) ---- */
+  .import-section { margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #2a2a2b; }
+  .import-dropzone {
+    border:1.5px dashed #3a3a3b;
+    border-radius:9px;
+    padding:22px 14px;
+    text-align:center;
+    color:#8a8680;
+    font-size:15px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .import-dropzone b { color:#f2f0ea; }
+  .import-dropzone.dragover { border-color:#e2101f; background:rgba(226,16,31,0.06); }
+  .import-preview-wrap { display:flex; align-items:center; gap:12px; margin-top:10px; }
+  .import-preview-wrap img { width:72px; height:72px; object-fit:cover; border-radius:8px; border:1.5px solid #2a2a2b; flex:0 0 auto; }
+  .import-preview-actions { display:flex; flex-direction:column; gap:8px; flex:1 1 auto; min-width:0; }
+  .import-remove-link { color:#ff6a6a; font-size:14px; cursor:pointer; text-decoration:underline; align-self:flex-start; }
+  .import-status { font-size:14px; color:#8a8680; margin-top:10px; }
+  .import-status.err { color:#ff6a6a; }
+  .import-entry {
+    background:#151516;
+    border:1.5px solid #2a2a2b;
+    border-radius:9px;
+    padding:13px;
+    margin-top:10px;
+  }
+  .import-entry-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .import-entry-top label { display:flex; align-items:center; gap:8px; font-size:15px; color:#f2f0ea; cursor:pointer; }
+  .import-entry-remove { color:#8a8680; font-size:13px; cursor:pointer; text-decoration:underline; }
+  .import-entry-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .import-entry-grid .field-sm.full { grid-column:1 / -1; }
+  .import-entry-grid label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:#8a8680; margin-bottom:3px; }
+  .import-entry-grid input, .import-entry-grid select { font-size:15px; padding:8px 10px; }
+
   .empty-state {
     text-align:center;
     color:#5f5c58;
@@ -593,6 +628,26 @@
     </div>
 
     <div id="panelBody" style="display:none">
+      <div class="import-section">
+        <div class="panel-field">
+          <label>Importar de post (IA)</label>
+          <div class="import-dropzone" id="importDropzone" tabindex="0">
+            <b>Clique para escolher</b>, arraste ou cole (Ctrl+V) a imagem do post com a agenda
+            <div style="margin-top:6px; font-size:13px;">PNG, JPEG, WEBP ou GIF — até ~3MB</div>
+            <input type="file" id="importFileInput" accept="image/*" style="display:none">
+          </div>
+          <div class="import-preview-wrap" id="importPreviewWrap" style="display:none">
+            <img id="importPreviewImg" alt="Prévia da imagem">
+            <div class="import-preview-actions">
+              <button class="download-btn" id="importExtractBtn" style="margin-top:0" disabled>Extrair agendas com IA</button>
+              <span class="import-remove-link" id="importRemoveLink">remover imagem</span>
+            </div>
+          </div>
+          <div class="import-status" id="importStatus"></div>
+          <div id="importResults"></div>
+        </div>
+      </div>
+
       <div class="panel-field">
         <label>Estado</label>
         <select id="panelState"></select>
@@ -987,6 +1042,244 @@ async function onDeleteEntryClick(ev) {
 
 function escapeHtml(str) {
   return (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------------- painel: importar agenda de imagem (IA) ---------------- */
+const importDropzone = document.getElementById('importDropzone');
+const importFileInput = document.getElementById('importFileInput');
+const importPreviewWrap = document.getElementById('importPreviewWrap');
+const importPreviewImg = document.getElementById('importPreviewImg');
+const importExtractBtn = document.getElementById('importExtractBtn');
+const importRemoveLink = document.getElementById('importRemoveLink');
+const importStatus = document.getElementById('importStatus');
+const importResults = document.getElementById('importResults');
+const MAX_IMPORT_IMAGE_BYTES = 3 * 1024 * 1024;
+
+let importImageBase64 = null;
+let importImageMediaType = null;
+
+function setImportStatus(msg, isError) {
+  importStatus.textContent = msg || '';
+  importStatus.classList.toggle('err', !!isError);
+}
+
+function resetImportImage() {
+  importImageBase64 = null;
+  importImageMediaType = null;
+  importFileInput.value = '';
+  importPreviewWrap.style.display = 'none';
+  importExtractBtn.disabled = true;
+}
+
+function fileToImportImage(file) {
+  if (!file || !file.type || !file.type.startsWith('image/')) {
+    setImportStatus('Selecione um arquivo de imagem (PNG, JPEG, WEBP ou GIF).', true);
+    return;
+  }
+  if (file.size > MAX_IMPORT_IMAGE_BYTES) {
+    setImportStatus('Imagem muito grande (máx. ~3MB) — tente um print menor ou mais comprimido.', true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    importImageBase64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+    importImageMediaType = file.type;
+    importPreviewImg.src = dataUrl;
+    importPreviewWrap.style.display = 'flex';
+    importExtractBtn.disabled = false;
+    setImportStatus('');
+    importResults.innerHTML = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+importDropzone.addEventListener('click', () => importFileInput.click());
+importDropzone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); importFileInput.click(); }
+});
+importFileInput.addEventListener('change', () => {
+  if (importFileInput.files[0]) fileToImportImage(importFileInput.files[0]);
+});
+importDropzone.addEventListener('dragover', (e) => { e.preventDefault(); importDropzone.classList.add('dragover'); });
+importDropzone.addEventListener('dragleave', () => importDropzone.classList.remove('dragover'));
+importDropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  importDropzone.classList.remove('dragover');
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (file) fileToImportImage(file);
+});
+document.addEventListener('paste', (e) => {
+  if (viewPanel.style.display !== 'block') return;
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        e.preventDefault();
+        fileToImportImage(file);
+      }
+      break;
+    }
+  }
+});
+importRemoveLink.addEventListener('click', () => {
+  resetImportImage();
+  importResults.innerHTML = '';
+  setImportStatus('');
+});
+
+function importEntryRowHtml(ev, idx) {
+  const estadoOptions = ['<option value="">—</option>'].concat(
+    ESTADOS.map(uf => '<option value="' + uf + '"' + (uf === ev.estado ? ' selected' : '') + '>' + uf + '</option>')
+  ).join('');
+  return '' +
+    '<div class="import-entry" data-idx="' + idx + '">' +
+      '<div class="import-entry-top">' +
+        '<label><input type="checkbox" class="import-entry-check" checked> Incluir</label>' +
+        '<span class="import-entry-remove">remover</span>' +
+      '</div>' +
+      '<div class="import-entry-grid">' +
+        '<div class="field-sm full"><label>Banda</label><input type="text" class="imp-banda" value="' + escapeHtml(ev.banda || '') + '"></div>' +
+        '<div class="field-sm"><label>Estado</label><select class="imp-estado">' + estadoOptions + '</select></div>' +
+        '<div class="field-sm"><label>Cidade</label><input type="text" class="imp-cidade" value="' + escapeHtml(ev.cidade || '') + '"></div>' +
+        '<div class="field-sm full"><label>Local</label><input type="text" class="imp-local" value="' + escapeHtml(ev.local || '') + '" maxlength="40"></div>' +
+        '<div class="field-sm"><label>Data (DD/MM)</label><input type="text" class="imp-data" value="' + escapeHtml(ev.data || '') + '" placeholder="DD/MM"></div>' +
+        '<div class="field-sm"><label>Horário</label><input type="text" class="imp-horario" value="' + escapeHtml(ev.horario || '') + '" placeholder="HH:mm"></div>' +
+      '</div>' +
+    '</div>';
+}
+
+function renderImportResults(eventos, avisos) {
+  importResults.innerHTML =
+    eventos.map((ev, idx) => importEntryRowHtml(ev, idx)).join('') +
+    '<button class="download-btn" id="importSaveBtn" style="margin-top:14px">Adicionar ' +
+      eventos.length + ' agenda' + (eventos.length > 1 ? 's' : '') + '</button>';
+
+  importResults.querySelectorAll('.import-entry-remove').forEach(el => {
+    el.addEventListener('click', () => {
+      el.closest('.import-entry').remove();
+      updateImportSaveButtonLabel();
+    });
+  });
+  document.getElementById('importSaveBtn').addEventListener('click', saveImportedEntries);
+
+  if (avisos && avisos.length) {
+    setImportStatus('Atenção: ' + avisos.join(' · '), true);
+  } else {
+    setImportStatus(eventos.length + ' agenda(s) encontrada(s) — revise os campos antes de salvar.');
+  }
+}
+
+function updateImportSaveButtonLabel() {
+  const btn = document.getElementById('importSaveBtn');
+  const remaining = importResults.querySelectorAll('.import-entry').length;
+  if (remaining === 0) {
+    importResults.innerHTML = '';
+  } else if (btn) {
+    btn.textContent = 'Adicionar ' + remaining + ' agenda' + (remaining > 1 ? 's' : '');
+  }
+}
+
+importExtractBtn.addEventListener('click', async () => {
+  if (!importImageBase64) return;
+  importExtractBtn.disabled = true;
+  importExtractBtn.textContent = 'Extraindo...';
+  setImportStatus('Lendo a imagem com IA, aguarde...');
+  importResults.innerHTML = '';
+  try {
+    const resp = await fetch('/api/extract-agenda', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+      body: JSON.stringify({ imageBase64: importImageBase64, mediaType: importImageMediaType })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Falha ao extrair.');
+    if (!data.eventos || data.eventos.length === 0) {
+      setImportStatus('Nenhuma agenda foi identificada nessa imagem.', true);
+    } else {
+      renderImportResults(data.eventos, data.avisos);
+    }
+  } catch (e) {
+    setImportStatus((e && e.message) || 'Falha ao extrair dados da imagem.', true);
+  }
+  importExtractBtn.disabled = false;
+  importExtractBtn.textContent = 'Extrair agendas com IA';
+});
+
+async function saveImportedEntries() {
+  const saveBtn = document.getElementById('importSaveBtn');
+  const rows = [...importResults.querySelectorAll('.import-entry')];
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Salvando...';
+
+  let ok = 0;
+  let ultimoUf = null;
+  const erros = [];
+  for (const row of rows) {
+    if (!row.querySelector('.import-entry-check').checked) continue;
+    const entry = {
+      tipo: 'own',
+      banda: row.querySelector('.imp-banda').value.trim(),
+      estado: row.querySelector('.imp-estado').value || document.getElementById('panelState').value,
+      cidade: row.querySelector('.imp-cidade').value.trim(),
+      local: row.querySelector('.imp-local').value.trim(),
+      data: row.querySelector('.imp-data').value.trim(),
+      horario: row.querySelector('.imp-horario').value.trim(),
+      segueArc: 'sim'
+    };
+    const nomeParaErro = entry.banda || 'agenda sem nome';
+    if (!entry.banda || !entry.estado || !entry.cidade || !entry.local || !entry.data || !entry.horario) {
+      erros.push(nomeParaErro + ': preencha os campos vazios.');
+      continue;
+    }
+    if (!/^\d{2}\/\d{2}$/.test(entry.data)) {
+      erros.push(nomeParaErro + ': data inválida (use DD/MM).');
+      continue;
+    }
+    if (entry.local.length > 40) {
+      erros.push(nomeParaErro + ': nome do local muito longo (máx. 40 caracteres).');
+      continue;
+    }
+    try {
+      const resp = await fetch('/api/agenda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'erro desconhecido');
+      ok++;
+      ultimoUf = entry.estado;
+      row.remove();
+    } catch (e) {
+      erros.push(nomeParaErro + ': ' + e.message);
+    }
+  }
+
+  if (ok > 0) {
+    try {
+      const refetch = await fetch('/api/agenda', { headers: { 'x-admin-key': adminKey } });
+      const refetchData = await refetch.json();
+      if (!refetch.ok) throw new Error(refetchData.error || 'Falha ao recarregar.');
+      allEntries = refetchData.entries || [];
+      populatePanelStates(ultimoUf || document.getElementById('panelState').value);
+    } catch (e) {
+      console.error('Falha ao recarregar agendas após importar:', e);
+    }
+  }
+  updateImportSaveButtonLabel();
+
+  const stillBtn = document.getElementById('importSaveBtn');
+  if (stillBtn) stillBtn.disabled = false;
+
+  if (erros.length === 0) {
+    setImportStatus(ok + ' agenda(s) adicionada(s) com sucesso.');
+    resetImportImage();
+  } else {
+    setImportStatus(ok + ' salva(s). Corrija e tente de novo: ' + erros.join(' · '), true);
+  }
 }
 
 // quantas agendas cabem por slide numa coluna só — passou disso, cria outro slide

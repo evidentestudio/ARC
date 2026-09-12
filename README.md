@@ -9,9 +9,10 @@ serverless na Vercel, seguindo o mesmo padrão de infra já usado no Mappa
 ```
 arc-site/
 ├── public/
-│   └── index.html      → formulário + painel (front-end estático)
+│   └── agenda.html       → formulário + painel (front-end estático)
 ├── api/
-│   └── agenda.js        → função serverless (POST salva, GET lista com senha)
+│   ├── agenda.js         → função serverless (POST salva, GET lista, DELETE remove — com senha)
+│   └── extract-agenda.js → função serverless (lê imagem de post com IA e devolve agendas — com senha)
 └── package.json
 ```
 
@@ -50,6 +51,9 @@ gh repo create evidentestudio/arc-agenda-rock-cristao --private --source=. --pus
    - `ARC_ADMIN_PASSCODE` → a senha que você quiser usar pra abrir o painel
      "Gerar slides" (essa fica só no servidor, nunca aparece no código do
      navegador — diferente da versão anterior)
+   - `ANTHROPIC_API_KEY` → chave da API da Anthropic (console.anthropic.com),
+     usada pelo botão "Importar de post (IA)" dentro do painel — sem ela,
+     esse botão continua no ar mas retorna erro de servidor não configurado
 5. Deploy
 
 ## 4. Apontar o domínio arc.evidenteprodutos.com.br
