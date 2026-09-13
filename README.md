@@ -1,5 +1,6 @@
 # ARC — Agenda Rock Cristão
 
+
 Site estático (formulário + painel de geração de slides) com backend
 serverless na Vercel, seguindo o mesmo padrão de infra já usado no Mappa
 (GitHub org `evidentestudio`, time Vercel `pedro-ec15`, DNS no Registro.br).
